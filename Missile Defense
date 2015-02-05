@@ -1,0 +1,452 @@
+;;----------------------------------------------------------------------------;;
+;;                            MISSILE DEFENSE GAME                            ;;
+;;----------------------------------------------------------------------------;;
+
+;;---------REQUIRED LIBRARIES---------;;
+(require 2htdp/image)
+(require 2htdp/universe)
+;(require math/base)
+
+;;----------DATA DEFINITIONS----------;;
+
+#|
+A Sprite is a (make-sprite Posn Posn Number String)
+interp. (make-sprite p1 p2 r c) is a sprite with p1
+as its location, p2 is its velocity, r is the size
+of the radius of the sprite and c is its color. Location,
+velocity and size are in computer-graphic/pixel coordinates.
+A sprite represents either an attacker's missile or a defender's
+anti-missile bullet.
+|#
+(define-struct sprite (loc vel size color))
+
+#|
+A LOS (list of sprites) is one of:
+- empty
+- (cons Sprite LOS)
+|#
+
+#|
+A World structure is a (make-world LOS LOS Number)
+- interp. (make-world m b h) is a world with m missiles
+(the missiles attacking the player), b bullets
+(bullets launched by the player) and h health (current
+health of the player -- game-over if health <= 0)
+|#
+(define-struct world (missiles bullets health))
+
+;;--------VARIABLE DEFINITIONS--------;;
+
+;; Constants
+(define MRADIUS 10)
+(define BRADIUS 6)
+(define MISSILE (ellipse MRADIUS 20 'solid 'red))
+(define BULLET (star BRADIUS 'solid 'blue))
+(define GUN (square 10 'solid 'blue))
+(define BG (rectangle 500 500 'outline 'black))
+(define BG-WTH-GUN (place-image GUN 250 495 (empty-scene 500 500)))
+(define MAX 5)
+(define START 
+  (place-image (text "Welcome to Missile Defense!" 30 'blue)
+               250 100
+               (place-image (text "by: Ryan Kernan & Keith Claeys" 15 'green)
+                            250 150
+                            BG-WTH-GUN)))
+;; Empty World
+(define lom0 empty)
+(define lob0 empty)
+(define world0 (make-world lom0 lob0 5))
+
+;; World 1
+(define m1 (make-sprite (make-posn 50 50) (make-posn 10 10) MRADIUS "red"))
+(define m2 (make-sprite (make-posn 60 60) (make-posn 5 10) MRADIUS "red"))
+(define lom1 (list m1 m2))
+(define b1 (make-sprite (make-posn 350 450) (make-posn -10 -10) BRADIUS "blue"))
+(define b2 (make-sprite (make-posn 300 400) (make-posn -5 -5) BRADIUS "blue"))
+(define lob1 (list b1 b2))
+(define world1 (make-world lom1 lob1 10))
+
+;; World 1.5 (World 1 moved 1 tick)
+(define m1.5 (make-sprite (make-posn 60 60) (make-posn 10 10) MRADIUS "red"))
+(define m2.5 (make-sprite (make-posn 65 70) (make-posn 5 10) MRADIUS "red"))
+(define lom1.5 (list m1.5 m2.5))
+(define b1.5 (make-sprite (make-posn 340 440) (make-posn -10 -10) BRADIUS "blue"))
+(define b2.5 (make-sprite (make-posn 295 395) (make-posn -5 -5) BRADIUS "blue"))
+(define lob1.5 (list b1.5 b2.5))
+(define world1.5 (make-world lom1.5 lob1.5 10))
+
+;; World 2 
+(define m3 (make-sprite (make-posn 60 60) (make-posn 10 10) MRADIUS "red"))
+(define m4 (make-sprite (make-posn 65 70) (make-posn 5 10) MRADIUS "red"))
+(define lom2 (list m3 m4))
+(define b3 (make-sprite (make-posn 350 450) (make-posn -10 -10) BRADIUS "blue"))
+(define b4 (make-sprite (make-posn 300 400) (make-posn -5 -5) BRADIUS "blue"))
+(define lob2 (list b3 b4))
+(define world2 (make-world lom2 lob2 10))
+
+;; World 2.5 (World 2 moved 1 tick)
+(define m3.5 (make-sprite (make-posn 70 70) (make-posn 10 10) MRADIUS "red"))
+(define m4.5 (make-sprite (make-posn 70 80) (make-posn 5 10) MRADIUS "red"))
+(define lom2.5 (list m3.5 m4.5))
+(define b3.5 (make-sprite (make-posn 350 450) (make-posn -10 -10) BRADIUS "blue"))
+(define b4.5 (make-sprite (make-posn 300 400) (make-posn -5 -5) BRADIUS "blue"))
+(define lob2.5 (list b3.5 b4.5))
+(define world2.5 (make-world lom2.5 lob2.5 10))
+
+;; World 3
+(define m5 (make-sprite (make-posn 70 70) (make-posn 10 10) MRADIUS "red"))
+(define m5.5 (make-sprite (make-posn 80 80) (make-posn 10 10) MRADIUS "red"))
+(define m6 (make-sprite (make-posn 70 80) (make-posn 5 10) MRADIUS "red"))
+(define lom3 (list m5 m6))
+(define b5 (make-sprite (make-posn 340 440) (make-posn -10 -10) BRADIUS "blue"))
+(define b6 (make-sprite (make-posn 295 395) (make-posn -5 -5) BRADIUS "blue"))
+(define lob3 (list b5 b6))
+(define world3 (make-world lom3 lob3 10))
+
+;; World 4
+(define m7 (make-sprite (make-posn 350 500) (make-posn 10 10) MRADIUS "red"))
+(define m8 (make-sprite (make-posn 200 500) (make-posn 10 10) MRADIUS "red"))
+(define m9 (make-sprite (make-posn 200 300) (make-posn 10 10) MRADIUS "red"))
+(define lom4 (list m7 m8 m9))
+(define b7 (make-sprite (make-posn 120 400) (make-posn -10 -10) BRADIUS "blue"))
+(define b8 (make-sprite (make-posn 230 270) (make-posn -10 -10) BRADIUS "blue"))
+(define lob4 (list b7 b8))
+(define world4 (make-world lom4 lob4 10))
+
+;; World 4d (World 4 after missiles have detonated)
+(define world4d (make-world lom4 lob4 8))
+
+;; World 5 (World 4 moved 1 tick
+(define m9.5 (make-sprite (make-posn 210 310) (make-posn 10 10) MRADIUS "red"))
+(define lom4.5 (list m9.5))
+(define b7.5 (make-sprite (make-posn 110 390) (make-posn -10 -10) BRADIUS "blue"))
+(define b8.5 (make-sprite (make-posn 220 260) (make-posn -10 -10) BRADIUS "blue"))
+(define lob4.5 (list b7.5 b8.5))
+(define world5 (make-world lom4.5 lob4.5 8))
+
+;; World 6
+(define m10 (make-sprite (make-posn 200 200) (make-posn 1 1) MRADIUS "red"))
+(define m11 (make-sprite (make-posn 300 300) (make-posn 1 1) MRADIUS "red"))
+(define m12 (make-sprite (make-posn 70 270) (make-posn 1 1) MRADIUS "red"))
+(define lom5 (list m10 m11 m12))
+(define b10 (make-sprite (make-posn 301 301) (make-posn -1 -1) BRADIUS "blue"))
+(define b11 (make-sprite (make-posn 202 202) (make-posn -1 -1) BRADIUS "blue"))
+(define b12 (make-sprite (make-posn 220 90) (make-posn -1 -1) BRADIUS "blue"))
+(define lob5 (list b10 b11 b12))
+(define world6 (make-world lom5 lob5 10))
+
+;; World 6.5 (World 6 moved one tick)
+(define lom5.5 (list m12))
+(define lob5.5 (list b12))
+(define world6.5 (make-world lom5.5 lob5.5 10))
+
+;; World Z (Entirely empty world, including no health)
+(define worldz (make-world empty empty 0))
+
+;; Test World for health
+(define world-health-test 
+  (make-world (list(make-sprite (make-posn 200 100) (make-posn 0 10) MRADIUS "red")) 
+              (list(make-sprite (make-posn 100 100) (make-posn 0 -10) BRADIUS "blue"))
+              1))
+
+(define m13 (make-sprite (make-posn 10 10) (make-posn .1 1) MRADIUS "red"))
+(define m14 (make-sprite (make-posn 100 10) (make-posn .1 3) MRADIUS "red"))
+(define m15 (make-sprite (make-posn 200 10) (make-posn .3 1) MRADIUS "red"))
+(define m16 (make-sprite (make-posn 300 10) (make-posn .2 3) MRADIUS "red"))
+(define lom6 (list m13 m14 m15 m16))
+
+(define lom7 (list m1 m2 m3 m4 m5))
+(define world7 (make-world lom6 lob1 10))
+(define world7.5 (make-world lom7 lob1 10))
+
+(define world-collide-test (make-world lom6 empty 10))
+
+;;--------FUNCTION DEFINITIONS--------;;
+
+;;-----TODRAW-----;;
+
+;; draw-world: World -> Image
+;; draws the world with missles and bullets
+(define (draw-world w)
+  (place-image (text (string-append "Health: " (number->string (world-health w))) 20 'green)
+               430 480
+               (overlay (draw-los (world-missiles w) MISSILE) 
+                        (draw-los (world-bullets w) BULLET) START)))
+
+(check-expect (draw-world world0) 
+              (place-image (text "Health: 5" 20 'green)
+                           430 480 START))
+(check-expect (draw-world world1) 
+              (place-image (text "Health: 10" 20 'green) 430 480 
+                            (place-image MISSILE 50 50
+                             (place-image MISSILE 60 60
+                              (place-image BULLET 350 450
+                               (place-image BULLET 300 400 START))))))
+
+;; draw-los: LOS Shape -> Image
+;; draws a list of sprites onto a canvas
+(define (draw-los alos shape)
+  (cond [(empty? alos) BG]
+        [(cons? alos) (place-image shape 
+                                   (posn-x (sprite-loc (first alos)))
+                                   (posn-y (sprite-loc (first alos)))
+                                   (draw-los (rest alos) shape))]))
+
+(check-expect (draw-los empty MISSILE) BG)
+(check-expect (draw-los lom1 MISSILE) 
+              (place-image MISSILE 50 50
+                           (place-image MISSILE 60 60 
+                                        BG)))
+
+;;-----ONTICK-----;;
+
+;; update-world: World -> World
+;; step the world forward one tick
+(define (update-world w)
+  (make-world (world-missiles (move-missiles (maybe-fire-missile (remove-dmdb w))))
+              (world-bullets (move-bullets (remove-dmdb w)))
+              (world-health (detonate-missiles w))))
+
+;; Because this function uses maybe-fire-missile, we cannot check worlds
+;; with less than 5 missiles due to the random missile generation. We can, 
+;; however, check that the length of the list of missiles after 
+;; updating is one more than before updating, with a cap of 5
+(check-expect (length (world-missiles (update-world world0))) 1)
+(check-expect (length (world-missiles (update-world world7))) 5)
+(check-expect (length (world-missiles (update-world world7.5))) 5)
+;; Since we have a world (world 7.5) that already has 5 missiles, we can
+;; check that update-world works on it because we are not worried about
+;; random missiles appearing over the cap of 5
+(check-expect (update-world world7.5) 
+              (make-world (list m1.5 m2.5 m3.5 m4.5 m5.5) lob1.5 10))
+
+;; maybe-fire-missile: World -> World
+;; if there are less than 5 missiles, fire another
+(define (maybe-fire-missile w)
+  (make-world (maybe-fire-missile-los (world-missiles w))
+              (world-bullets w)
+              (world-health w)))
+
+;; Because maybe-fire-missile creates a random missile if the number
+;; of missiles is less than 5, we can check that the length of the list
+;; of missiles in a world increases by 1, but does not go past 5 because
+;; we cannot account for the random nature of the missiles
+(check-expect (length (world-missiles (maybe-fire-missile world0))) 1)
+(check-expect (length (world-missiles (maybe-fire-missile world7))) 5)
+(check-expect (length (world-missiles (maybe-fire-missile world7.5))) 5)
+
+;; maybe-fire-missile-los: [List-of Sprite] -> [List-of Sprite]
+;; if there are less than 5 missiles, fire another
+(define (maybe-fire-missile-los alos)
+  (cond [(empty? alos) (cons (create-missile (random 500) 
+                                             (random 500) 
+                                             (+ 4 (random 2)))
+                             empty)]
+        [(cons? alos) (if (> MAX (length alos))
+                          (cons (create-missile (random 500) 
+                                                (random 500) 
+                                                (+ 4 (random 2)))
+                                alos)
+                          alos)]))
+
+;; Because maybe-fire-missile-los always adds a missile if the 
+;; list of missiles has less than 5, we can check that the length 
+;; of the list of missiles goes up by one but caps at 5, 
+;; even though we can't check their random posns
+(check-expect (length (maybe-fire-missile-los lom0)) 1);; 0 -> 1
+(check-expect (length (maybe-fire-missile-los lom6)) 5);; 4 -> 5
+(check-expect (length (maybe-fire-missile-los lom7)) 5);; 5 -> 5
+
+;; create-missile: Number Number Number -> Missile
+;; creates a missile with a random starting position at the top,
+;; and a random velocity that will cause it to reach the bottom
+(define (create-missile x1 x2 y)
+  (make-sprite (make-posn x1 1)
+               (make-posn (/ (- x2 x1) 
+                             (/ 500 y))
+                          y)
+               MRADIUS
+               "red"))
+
+(check-expect (create-missile 100 200 10) 
+              (make-sprite (make-posn 100 1) (make-posn 2 10) MRADIUS "red"))
+(check-expect (create-missile 200 100 10) 
+              (make-sprite (make-posn 200 1) (make-posn -2 10) MRADIUS "red"))
+
+;; move-los: [List-of Sprites] -> [List-of Sprites]
+;; moves the bullets one time step and removes any that are offscreen
+(define (move-los alos)
+  (cond
+    [(empty? alos) empty]
+    [(cons? alos) (if (and (< 0 (posn-x (sprite-loc (first alos))) 500)
+                           (< 0 (posn-y (sprite-loc (first alos))) 500))
+                      (cons (move-s (first alos)) (move-los (rest alos)))
+                      (move-los (rest alos)))]))
+
+(check-expect (move-los lob0) empty)
+(check-expect (move-los lob1) lob1.5)
+(check-expect (move-los lom1) lom1.5)
+
+;; move-s: Sprite -> Sprite
+;; moves a single bullet one time step
+(define (move-s as)
+  (make-sprite (make-posn (+ (posn-x (sprite-loc as)) 
+                             (posn-x (sprite-vel as)))
+                          (+ (posn-y (sprite-loc as)) 
+                             (posn-y (sprite-vel as))))
+               (sprite-vel as)
+               (sprite-size as)
+               (sprite-color as)))
+
+(check-expect (move-s b1) b1.5)
+
+;; move-bullets: World -> World
+;; moves the bullets one time step
+(define (move-bullets w)
+  (make-world (world-missiles w)
+              (move-los (world-bullets w))
+              (world-health w)))
+
+(check-expect (move-bullets world0) world0)
+(check-expect (move-bullets world1) (make-world lom1 lob1.5 10))
+
+;; move-missiles: World -> World
+;; move the missiles one time step
+(define (move-missiles w)
+  (make-world (move-los (world-missiles w))
+              (world-bullets w)
+              (world-health w)))
+
+(check-expect (move-missiles world0) world0)
+(check-expect (move-missiles world2) (make-world lom2.5 lob2 10))
+
+;; detonate-missiles: World -> World
+;; removes missiles that have landed and decrement player health
+(define (detonate-missiles w)
+  (make-world (world-missiles w)
+              (world-bullets w)
+              (- (world-health w) (detonate-lom (world-missiles w)))))
+
+(check-expect (detonate-missiles world0) world0)
+(check-expect (detonate-missiles world4) world4d)
+
+;; detonate-lom: [List-of Sprites] -> Number
+;; calculates number of missiles hitting ground
+(define (detonate-lom alom)
+  (length (filter (λ (x) (<= 500 (posn-y (sprite-loc x))))
+                  alom)))
+
+(check-expect (detonate-lom empty) 0)
+(check-expect (detonate-lom lom4) 2)
+
+;; remove-dmdb: World -> World
+;; Remove every missile that is touching some bullet and vice-versa.
+(define (remove-dmdb w)
+  (make-world (los-remove-dmdb (world-missiles w) (world-bullets w))
+              (los-remove-dmdb (world-bullets w) (world-missiles w))
+              (world-health w)))
+
+(check-expect (remove-dmdb world0) world0)
+(check-expect (remove-dmdb world6) world6.5)
+
+;; los-remove-dmdb: [List-of Sprite] [List-of Sprite] -> [List-of Sprite]
+;; removes sprites that have collided
+(define (los-remove-dmdb los1 los2)
+  (cond [(empty? los1) empty]
+        [(empty? los2) los1]
+        [(cons? los2) (los-remove-dmdb (s-remove-dmdb los1 (first los2)) 
+                                       (rest los2))]))
+
+(check-expect (los-remove-dmdb empty empty) empty)
+(check-expect (los-remove-dmdb lom5 lob5) lom5.5)
+(check-expect (los-remove-dmdb lob5 lom5) lob5.5)
+
+;; s-remove-dmdb: [List-of Sprite] Sprite -> [List-of Sprite]
+;; produces LoS that haven't collided with sprite
+(define (s-remove-dmdb alos s)
+  (filter (λ (x) (notcollide? x s)) alos))
+
+(check-expect (s-remove-dmdb empty empty) empty)
+(check-expect (s-remove-dmdb lom5 b10) (list m10 m12))
+
+;; notcollide?: Sprite Sprite -> Boolean
+;; produces true if sprites have not collided
+(define (notcollide? as1 as2)
+  (< (+ (sprite-size as1) (sprite-size as2))
+     (distance (posn-x (sprite-loc as1))
+               (posn-y (sprite-loc as1))
+               (posn-x (sprite-loc as2))
+               (posn-y (sprite-loc as2)))))
+
+(check-expect (notcollide? m10 b10) true)
+(check-expect (notcollide? m10 b11) false)
+(check-expect (notcollide? m11 b11) true)
+(check-expect (notcollide? m11 b10) false)
+
+;; distance: Number Number Number Number -> Number
+;; calculates distance between two points
+(define (distance x0 y0 x1 y1)
+  (sqrt (+ (sqr (- x1 x0)) (sqr (- y1 y0)))))
+
+(check-expect (distance 250 0 250 100) 100)
+(check-expect (distance 0 250 100 250) 100)
+
+;;-----ONMOUSE-----;;
+
+;; fire-gun: world number number mouse-event -> world
+;; creates a bullet moving in the direction of the position of the mouse click
+(define (fire-gun w x y m)
+  (if (mouse=? m "button-down")
+      (make-world (world-missiles w) 
+                  (cons (create-bullet x y)
+                        (world-bullets w))
+                  (world-health w))
+      w))
+
+(check-expect (fire-gun world1 250 250 "button-down")
+              (make-world (world-missiles world1)
+                          (cons (create-bullet 250 250) 
+                                (world-bullets world1))
+                          (world-health world1)))
+(check-expect (fire-gun world1 250 250 "button-up") world1)
+
+;; create-bullet: Posn -> Bullet
+;; creates a bullet with velocity 100 traveling towards a given coordinate
+(define (create-bullet x y)
+  (make-sprite (make-posn 250 495)
+               (make-posn (floor (/ (- x 250) (/ (- 495 y) 10)))
+                          -10)
+               BRADIUS
+               "blue"))
+
+;;-----STOPWHEN-----;;
+
+;; end-game: World -> Boolean
+;; returns true if health has reached 0
+(define (end-game w)
+  (>= 0 (world-health w)))
+
+(check-expect (end-game world0) false)
+(check-expect (end-game worldz) true)
+
+;;-----LASTSCENE-----;;
+
+;; last-scene: Anything -> Image
+;; displays end of game message
+(define (last-scene w)
+  (place-image 
+   (text "Game Over" 30 'red)
+   250 250 BG))
+
+;;------MAIN------;;
+
+;; main: World -> World
+;; runs the missle defense game
+(define (main w)
+  (big-bang w
+            [to-draw draw-world]
+            [on-tick update-world]
+            [on-mouse fire-gun]
+            [stop-when end-game last-scene]))
+
+;(main world0)
